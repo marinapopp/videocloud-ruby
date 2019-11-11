@@ -5,7 +5,7 @@ module VideocloudService
   class Profile < Base
     attr_reader :result, :params
 
-    def get_all_ingested_profiles()
+    def get_all_ingested_profiles
       @result = @api_service.perform_action('get', 'profiles');
     rescue StandardError => e
       add_error(e)

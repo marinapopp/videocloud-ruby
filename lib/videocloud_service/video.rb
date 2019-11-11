@@ -32,7 +32,11 @@ module VideocloudService
 
     def get_video_assets(params = {})
       stringify_params(params)
-      @result = @api_service.perform_action('get', "videos/#{video_id}/assets/#{asset_type}");
+      url = "videos/#{video_id}/assets"
+      if assetType = @params['assetType']
+        url += "/#{assetType}"
+      end
+      @result = @api_service.perform_action('get', url);
     rescue StandardError => e
       add_error(e)
     end

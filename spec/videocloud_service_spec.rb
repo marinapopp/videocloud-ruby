@@ -113,15 +113,15 @@ RSpec.describe VideocloudService do
         video_object.get_video_assets()
         expect(video_object.result[:error]).to eq ('Missing videoId')
       end
-
-      it 'gets error as a result if assetType not given' do
-        video_object.get_video_assets({ 'videoId': 1 })
-        expect(video_object.result[:error]).to eq ('Missing assetType')
-      end
       
-      it 'calls perform_action with correct url' do
+      it 'calls perform_action with correct url if asset_type is given' do
         expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/1/assets/asset_type')
         video_object.get_video_assets({ 'videoId': 1,  'assetType': 'asset_type' })
+      end
+
+      it 'calls perform_action with correct url if asset_type is not given' do
+        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/1/assets')
+        video_object.get_video_assets({ 'videoId': 1 })
       end
 
       it 'gets correct response' do
