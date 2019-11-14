@@ -5,6 +5,7 @@ module VideocloudService
 
     def initialize(authParameters = {})
       @api_service = VideocloudService::Api.instance(authParameters)
+      @account_id = authParameters['AccountId'] || ENV['BRIGHTCOVE_ACCOUNT_ID']
     end
 
     def add_error(e)

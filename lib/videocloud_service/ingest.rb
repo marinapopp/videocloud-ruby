@@ -5,6 +5,11 @@ module VideocloudService
     attr_reader :result, :params
     validate :validate_params
 
+    def initialize(authParameters = {})
+      super
+      @base_url = "#{VideocloudService::Api::CMS_API_ROOT}/#{@account_id}"
+    end
+
     def ingest_video(params)
       stringify_params(params)
       valid? && ingest_video_and_assets
@@ -63,9 +68,8 @@ module VideocloudService
     end
 
     def ingest_video_and_assets
-      @result = VideocloudService::Api.instance.perform_action('post', 
-                                                     "videos/#{params['video_id']}/ingest-requests",
-                                                     ingest_params.to_json)
+      url = "#{@base_url}/videos/#{params['video_id']}/ingest-requests"
+      @result = @api_service.perform_action('post', url, ingest_params.to_json)
     rescue StandardError => e
       add_error(e.message)
     end

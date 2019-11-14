@@ -50,6 +50,8 @@ def ingest_video
 end
 
 def get_videos(params = {})
+  puts ''
+  puts "********  get_videos *********", params
   service = VideocloudService::Video.new($authParameters)
   service.get_videos(params)
   puts service.result
@@ -61,44 +63,61 @@ def delete_video(videoId)
 end
 
 def get_videos_by_id(params)
+  puts "********  get_videos_by_id *********"
   service = VideocloudService::Video.new($authParameters)
   service.get_videos_by_ids(params)
   puts service.result
 end
 
 def get_video_asset(params)
+  puts ''
+  puts "********  get_video_asset *********"
   service = VideocloudService::Video.new($authParameters)
   service.get_video_assets(params)
   puts service.result
 end
 
 def get_video_count(params)
+  puts ''
+  puts "********  get_video_count *********",params
   service = VideocloudService::Video.new($authParameters)
   service.get_video_count(params)
   puts service.result
 end
 
 def get_video(params)
+  puts ''
+  puts "********  get_video *********",params
   service = VideocloudService::Video.new($authParameters)
   service.get_video(params)
   puts service.result
 end
 
 def get_profiles
+  puts ''
+  puts "********  get_profiles *********"
   service = VideocloudService::Profile.new($authParameters)
   service.get_all_ingested_profiles
   puts service.result
 end
 
+def get_profile(params)
+  puts ''
+  puts "********  get_profile *********",params
+  service = VideocloudService::Profile.new($authParameters)
+  service.get_ingested_profile
+  puts service.result
+end
+
 def main
+  get_videos
   id = ingest_video
   delete_video(id)
-  get_videos
-  get_videos({'limit' => 1})
+  get_videos({'limit' => 10})
   get_videos_by_id({ 'videoIds' => ['6101921474001', '6101384271001'] })
   get_video_asset({'videoId' => '6101851149001', 'assetType' => 'renditions'})
   get_video_asset({'videoId' => '6101851149001', 'assetType' => 'hls_manifest'})
-  get_video_count({'q' => 'aaa'})
+  get_video_count({})
   get_video({'videoId' => '6101917651001'})
   get_profiles
 end

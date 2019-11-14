@@ -10,7 +10,8 @@ module VideocloudService
   class Api
 
     OAUTH_ENDPOINT = 'https://oauth.brightcove.com/v4/access_token'
-    API_ROOT = 'https://cms.api.brightcove.com/v1/accounts'
+    CMS_API_ROOT = 'https://cms.api.brightcove.com/v1/accounts'
+    INGEST_API_ROOT = 'https://ingestion.api.brightcove.com/v1/accounts'
     PER_PAGE = 100
 
     def self.instance(authParameters = {})
@@ -20,8 +21,6 @@ module VideocloudService
     def initialize(authParameters = {})
       @client_id = authParameters['CliendId'] || ENV['BRIGHTCOVE_CLIENT_ID']
       @client_secret = authParameters['CliendSecret'] || ENV['BRIGHTCOVE_CLIENT_SECRET']
-      account_id = authParameters['AccountId'] || ENV['BRIGHTCOVE_ACCOUNT_ID']
-      @base_url = "#{API_ROOT}/#{account_id}"
       if [@client_id, @client_secret].any? { |c| c.to_s.empty? }
         raise StandardError, 'Missing Brightcove API credentials'
       end
@@ -31,7 +30,8 @@ module VideocloudService
     def perform_action(request_type, url, params = {}, query = {})
       set_token if @token_expires < Time.now
       @request_type = request_type
-      @url = "#{@base_url}/#{url}"
+      @url = url
+      puts '@url = ',@url
       query_prams = query.map{|k,v| "#{k}=#{v}"}.join('&')
       @url += "?#{query_prams}" unless query_prams.empty?
       @params = params
@@ -54,7 +54,7 @@ module VideocloudService
     end
 
     def http
-      HTTP.headers(Authorization: "Bearer #{@token}", 'Content-Type': 'application/json')
+      HTTP.headers('Authorization' => "Bearer #{@token}", 'Content-Type' => 'application/json')
     end
 
     private

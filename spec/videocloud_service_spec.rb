@@ -9,6 +9,8 @@ RSpec.describe VideocloudService do
   let(:video_object) { VideocloudService::Video.new(authParameters) }
   let(:ingest_object) { VideocloudService::Ingest.new(authParameters) }
   let(:profile_object) { VideocloudService::Profile.new(authParameters) }
+  let(:cms_base_url) {'https://cms.api.brightcove.com/v1/accounts/someAccountId'}
+  let(:ingest_base_url) {'https://ingestion.api.brightcove.com/v1/accounts/someAccountId'}
   
   it 'has a version number' do
     expect(VideocloudService::VERSION).not_to be nil
@@ -66,7 +68,8 @@ RSpec.describe VideocloudService do
       
       it 'calls perform_action with given query' do
         query = {'limit' => 1}
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos', {}, query)
+        url = "#{cms_base_url}/videos"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url, {}, query)
         video_object.get_videos(query)
       end
 
@@ -78,7 +81,8 @@ RSpec.describe VideocloudService do
       it 'query has right keys' do
         query = { 'limit' => 1, 'blabla' => 2, 'q' => 3, 'offset' => 4, 'sort' => 5 }
         query_res = query.slice('limit', 'q', 'offset', 'sort')
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos', {}, query_res)
+        url = "#{cms_base_url}/videos"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url, {}, query_res)
         video_object.get_videos(query)
       end
     end
@@ -89,17 +93,19 @@ RSpec.describe VideocloudService do
         allow_any_instance_of(VideocloudService::Api).to receive(:perform_action).and_return(getVideosResponse)
       end
       it 'calls perform_action without ids if not given' do
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/')
+        url = "#{cms_base_url}/videos/"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url)
         video_object.get_videos_by_ids()
       end
 
       it 'calls perform_action with given ids' do
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/1,2,3')
-        video_object.get_videos_by_ids({'videoIds': [1,2,3]})
+        url = "#{cms_base_url}/videos/1,2,3"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url)
+        video_object.get_videos_by_ids({'videoIds' => [1,2,3]})
       end
 
       it 'gets correct response' do
-        video_object.get_videos_by_ids({'videoIds': [1]})
+        video_object.get_videos_by_ids({'videoIds' => [1]})
         expect(video_object.result).to eq (getVideosResponse)
       end
     end
@@ -115,17 +121,19 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url if asset_type is given' do
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/1/assets/asset_type')
-        video_object.get_video_assets({ 'videoId': 1,  'assetType': 'asset_type' })
+        url = "#{cms_base_url}/videos/1/assets/asset_type"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url)
+        video_object.get_video_assets({ 'videoId' => 1,  'assetType' => 'asset_type' })
       end
 
       it 'calls perform_action with correct url if asset_type is not given' do
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/1/assets')
-        video_object.get_video_assets({ 'videoId': 1 })
+        url = "#{cms_base_url}/videos/1/assets"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url)
+        video_object.get_video_assets({ 'videoId' => 1 })
       end
 
       it 'gets correct response' do
-        video_object.get_video_assets({ 'videoId': 1,  'assetType': 'asset_type' })
+        video_object.get_video_assets({ 'videoId' => 1,  'assetType' => 'asset_type' })
         expect(video_object.result).to eq (getVideosResponse)
       end
     end
@@ -141,17 +149,18 @@ RSpec.describe VideocloudService do
       end
 
       it 'gets error as a result if assetType not given' do
-        video_object.create_video_asset({ 'videoId': 1 })
+        video_object.create_video_asset({ 'videoId' => 1 })
         expect(video_object.result[:error]).to eq ('Missing assetType')
       end
       
       it 'calls perform_action with correct url' do
-        expect(video_object.api_service).to receive(:perform_action).with('post', 'videos/1/assets/asset_type', { 'a': 1 }.to_json)
-        video_object.create_video_asset({ 'videoId': 1,  'assetType': 'asset_type' }, { 'a': 1 })
+        url = "#{cms_base_url}/videos/1/assets/asset_type"
+        expect(video_object.api_service).to receive(:perform_action).with('post', url, { 'a' => 1 }.to_json)
+        video_object.create_video_asset({ 'videoId' => 1,  'assetType' => 'asset_type' }, { 'a' => 1 })
       end
 
       it 'gets correct response' do
-        video_object.create_video_asset({ 'videoId': 1,  'assetType': 'asset_type' })
+        video_object.create_video_asset({ 'videoId' => 1,  'assetType' => 'asset_type' })
         expect(video_object.result).to eq (1) 
       end
     end
@@ -167,12 +176,13 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        expect(video_object.api_service).to receive(:perform_action).with('patch', 'videos/1', { 'a': 1 }.to_json)
-        video_object.update_video({ 'videoId': 1 }, { 'a': 1 })
+        url = "#{cms_base_url}/videos/1"
+        expect(video_object.api_service).to receive(:perform_action).with('patch', url, { 'a' => 1 }.to_json)
+        video_object.update_video({ 'videoId' => 1 }, { 'a' => 1 })
       end
 
       it 'gets correct response' do
-        video_object.update_video({ 'videoId': 1 })
+        video_object.update_video({ 'videoId' => 1 })
         expect(video_object.result).to eq (1) 
       end
     end
@@ -183,14 +193,15 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        query = { 'blabla': 2, 'q': 3 }
+        query = { 'blabla' => 2, 'q' => 3 }
         query_res = query.slice('q')
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'counts/videos', {}, query_res)
+        url = "#{cms_base_url}/counts/videos"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url, {}, query_res)
         video_object.get_video_count(query)
       end
 
       it 'gets correct response' do
-        video_object.get_video_count({ 'q': 1})
+        video_object.get_video_count({ 'q' => 1})
         expect(video_object.result).to eq (1) 
       end
     end
@@ -206,12 +217,13 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        expect(video_object.api_service).to receive(:perform_action).with('get', 'videos/1', {})
-        video_object.get_video({ 'videoId': 1 })
+        url = "#{cms_base_url}/videos/1"
+        expect(video_object.api_service).to receive(:perform_action).with('get', url, {})
+        video_object.get_video({ 'videoId' => 1 })
       end
 
       it 'gets correct response' do
-        video_object.get_video({ 'videoId': 1 })
+        video_object.get_video({ 'videoId' => 1 })
         expect(video_object.result).to eq (1) 
       end
     end
@@ -227,12 +239,13 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        expect(video_object.api_service).to receive(:perform_action).with('delete', 'videos/1', {})
-        video_object.delete_video({ 'videoId': 1 })
+        url = "#{cms_base_url}/videos/1"
+        expect(video_object.api_service).to receive(:perform_action).with('delete', url, {})
+        video_object.delete_video({ 'videoId' => 1 })
       end
 
       it 'gets correct response' do
-        video_object.delete_video({ 'videoId': 1 })
+        video_object.delete_video({ 'videoId' => 1 })
         expect(video_object.result).to eq (1) 
       end
     end
@@ -255,7 +268,8 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        expect(ingest_object.api_service).to receive(:perform_action).with('post', 'videos/1/ingest-requests', ingestRequestParams.to_json)
+        url = "#{cms_base_url}/videos/1/ingest-requests"
+        expect(ingest_object.api_service).to receive(:perform_action).with('post', url, ingestRequestParams.to_json)
         ingest_object.ingest_video(ingestParams)
       end
 
@@ -277,7 +291,8 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        expect(ingest_object.api_service).to receive(:perform_action).with('get', 'profiles')
+        url = "#{ingest_base_url}/profiles"
+        expect(ingest_object.api_service).to receive(:perform_action).with('get', url)
         profile_object.get_all_ingested_profiles()
       end
 
@@ -298,12 +313,13 @@ RSpec.describe VideocloudService do
       end
       
       it 'calls perform_action with correct url' do
-        expect(profile_object.api_service).to receive(:perform_action).with('get', 'profiles/1')
-        profile_object.get_ingested_profile({ 'profileId': 1 })
+        url = "#{ingest_base_url}/profiles/1"
+        expect(profile_object.api_service).to receive(:perform_action).with('get', url)
+        profile_object.get_ingested_profile({ 'profileId' => 1 })
       end
 
       it 'gets correct response' do
-        profile_object.get_ingested_profile({ 'profileId': 1 })
+        profile_object.get_ingested_profile({ 'profileId' => 1 })
         expect(profile_object.result).to eq ({}) 
       end
     end

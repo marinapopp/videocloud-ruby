@@ -5,6 +5,11 @@ module VideocloudService
   class Video < Base
     attr_reader :result, :params, :brightcove_video
     validate :long_form_video
+
+    def initialize(authParameters = {})
+      super
+      @base_url = "#{VideocloudService::Api::CMS_API_ROOT}/#{@account_id}"
+    end
     
     def create_videos(params)
       stringify_params(params)
@@ -18,14 +23,14 @@ module VideocloudService
     def get_videos(params = {})
       stringify_params(params)
       query = params.select { |k,v| ['limit', 'offset', 'sort', 'q'].include?(k) }
-      @result = @api_service.perform_action('get', 'videos', {}, query);
+      @result = @api_service.perform_action('get', "#{@base_url}/videos", {}, query);
     rescue StandardError => e
       add_error(e)
     end
 
-    def get_videos_by_ids(params = {'videoIds': []})
+    def get_videos_by_ids(params = {'videoIds' => []})
       stringify_params(params)
-      @result = @api_service.perform_action('get', "videos/#{@params['videoIds'].join(',')}");
+      @result = @api_service.perform_action('get', "#{@base_url}/videos/#{@params['videoIds'].join(',')}");
     rescue StandardError => e
       add_error(e)
     end
@@ -36,42 +41,42 @@ module VideocloudService
       if assetType = @params['assetType']
         url += "/#{assetType}"
       end
-      @result = @api_service.perform_action('get', url);
+      @result = @api_service.perform_action('get', "#{@base_url}/#{url}");
     rescue StandardError => e
       add_error(e)
     end
 
     def create_video_asset(params = {}, data = {})
       stringify_params(params)
-      @result = @api_service.perform_action('post', "videos/#{video_id}/assets/#{asset_type}", data.to_json);
+      @result = @api_service.perform_action('post', "#{@base_url}/videos/#{video_id}/assets/#{asset_type}", data.to_json);
     rescue StandardError => e
       add_error(e)
     end
 
     def update_video(params = {}, data = {})
       stringify_params(params)
-      @result = @api_service.perform_action('patch', "videos/#{video_id}", data.to_json);
+      @result = @api_service.perform_action('patch', "#{@base_url}/videos/#{video_id}", data.to_json);
     rescue StandardError => e
       add_error(e)
     end
 
     def get_video_count(params = {})
       query = params.select { |k,v| ['sort', 'q'].include?(k) }
-      @result = @api_service.perform_action('get', 'counts/videos', {}, query);
+      @result = @api_service.perform_action('get', "#{@base_url}/counts/videos", {}, query);
     rescue StandardError => e
       add_error(e)
     end
 
     def get_video(params = {})
       stringify_params(params) 
-      @result = @api_service.perform_action('get', "videos/#{video_id}", {});
+      @result = @api_service.perform_action('get', "#{@base_url}/videos/#{video_id}", {});
     rescue StandardError => e
       add_error(e)
     end
 
     def delete_video(params = {})
       stringify_params(params)
-      @result = @api_service.perform_action('delete', "videos/#{video_id}", {});
+      @result = @api_service.perform_action('delete', "#{@base_url}/videos/#{video_id}", {});
     rescue StandardError => e
       add_error(e)
     end
@@ -101,16 +106,18 @@ module VideocloudService
       false
     end
 
-    def long_form_video     
-      return true if params['assets']&.values&.any? do |a|
-        a['type'] == 'long_form_video'
+    def long_form_video
+      if params['assets'] && (params['assets'].is_a? Hash)
+        return params['assets'].values.any? do |a|
+            a['type'] == 'long_form_video'
+          end
       end
       errors.add(:base, 'long_form_video required')
       @result = { error: 'long_form_video required' }
     end
 
     def create_videos_on_brightcove
-      @brightcove_video = @api_service.perform_action('post', 'videos', brightcove_video_params.to_json)
+      @brightcove_video = @api_service.perform_action('post', "#{@base_url}/videos", brightcove_video_params.to_json)
     end
 
     def brightcove_video_params
@@ -186,7 +193,7 @@ module VideocloudService
     end
 
     def get_s3_url(video_id, filename)
-      @api_service.perform_action('get', "videos/#{video_id}/upload-urls/#{filename}");
+      @api_service.perform_action('get', "#{@base_url}/videos/#{video_id}/upload-urls/#{filename}");
     end
     
   end
